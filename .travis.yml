@@ -1,36 +1,49 @@
 dist: trusty
 sudo: required
+
 env:
-- COREOS_TRACK=stable
-- COREOS_TRACK=beta
-- COREOS_TRACK=alpha
+  - COREOS_TRACK=stable
+  - COREOS_TRACK=beta
+  - COREOS_TRACK=alpha
+
 before_script:
-- curl https://${COREOS_TRACK}.release.core-os.net/amd64-usr/current/version.txt -o
-  version.txt
-- cat version.txt
-- export $(cat version.txt | xargs)
-- if [ ! -z `curl https://api.github.com/repos/${TRAVIS_REPO_SLUG}/tags | grep "name"
-  | cut -d '"' -f4 | grep "${COREOS_VERSION}"` ]; then travis_terminate 0; fi
-- curl http://download.virtualbox.org/virtualbox/LATEST.TXT -o version.txt
-- cat version.txt
-- export VBOX_VERSION=`cat version.txt`
-- mkdir -p $TRAVIS_BUILD_DIR/deploy
+  - curl https://${COREOS_TRACK}.release.core-os.net/amd64-usr/current/version.txt -o version.txt
+  - cat version.txt
+  - export $(cat version.txt | xargs)
+  - if [ ! -z `curl https://api.github.com/repos/${TRAVIS_REPO_SLUG}/tags | grep "name" | cut -d '"' -f4 | grep "${COREOS_VERSION}"` ]; then
+      travis_terminate 0;
+    fi
+  - curl http://download.virtualbox.org/virtualbox/LATEST.TXT -o version.txt
+  - cat version.txt
+  - export VBOX_VERSION=`cat version.txt`
+  - mkdir -p $TRAVIS_BUILD_DIR/deploy
+
 script:
-- docker build --build-arg COREOS_VERSION=${COREOS_VERSION} --build-arg VBOX_VERSION=${VBOX_VERSION}
-  --tag ${DOCKER_USER}/vboxguest:${COREOS_VERSION} .
-- docker create --name vboxguest ${DOCKER_USER}/vboxguest:${COREOS_VERSION} .
-- docker cp vboxguest:/dist/vboxguest.tar.gz $TRAVIS_BUILD_DIR/deploy/.
+  - docker build
+    --build-arg COREOS_VERSION=${COREOS_VERSION}
+    --build-arg VBOX_VERSION=${VBOX_VERSION}
+    --tag ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
+    .
+  - docker create
+    --name vboxguest ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
+    .
+  - docker cp
+    vboxguest:/dist/vboxguest.tar.gz
+    $TRAVIS_BUILD_DIR/deploy/.
+
 before_deploy:
-- git config --local user.name "${GITHUB_USER}"
-- git config --local user.email "${GITHUB_EMAIL}"
-- git tag "${COREOS_VERSION}"
+  - git config --local user.name "${GITHUB_USER}"
+  - git config --local user.email "${GITHUB_EMAIL}"
+  - git tag "${COREOS_VERSION}"
+
 deploy:
   provider: releases
   api_key:
-  - secure: "fx4J3Su5O6SBgc8UY+F4r73tiW0gNcygmT/I0CPPgN6UXTKss14yefQAeeG+dK4Y08zPB6vSBbUq5dIpbaHK38rTL+sjBeFJPwj12AjvfBKJaE+FUNxxdHfpfealwhF+dlgJI/bpkzeBxebNt1JPZOIt375hH585S4Pl9z5icV2/kDU9bHm/pvvfE2f2EsnpXBcC5Rc0FPrlXxoGrA63ps2Olb9zTFQzwv6BqmCUaL+YUQEolgh3eAy7i1ovaX5xfmn1n7z7Ra4yZLzgbHSWtLg+9cPan2YiW3bCG3fMTUlzzG0kXJkW9IjrebBiIaC1AG8X74oaBnx0oWAGFjg0FaHIqRsqGB9Nk86K+avf+USa2LCiQS66IIkPANdp0WUpwJM93T1mVeeS8V62DN4CmgOaARcVLKIempdrg7D+N8gDx590x1vB5j1Ekco+OXAicGi03P5OjU3GM+coagksuRNquvUNVkO2rrf9a0tKkHCKCxcSm1W/pOrSbePJcEdFrsvQB+zcaUQ201NzQrRFyRkYJz5wrzjStwmq1twZSmuoRvvLsFEHHar+8ibS995gg2skq354K4jJro6rwVnF1I8Z4F5G+ervyUUVsxq2NAL52pAs5ZruRNaUcicHp7Ieaf6iE6UGOT5O9D7uLN7ZJF9Pzb6OawDHMq9GAdVGe0k="
+    - secure: "fx4J3Su5O6SBgc8UY+F4r73tiW0gNcygmT/I0CPPgN6UXTKss14yefQAeeG+dK4Y08zPB6vSBbUq5dIpbaHK38rTL+sjBeFJPwj12AjvfBKJaE+FUNxxdHfpfealwhF+dlgJI/bpkzeBxebNt1JPZOIt375hH585S4Pl9z5icV2/kDU9bHm/pvvfE2f2EsnpXBcC5Rc0FPrlXxoGrA63ps2Olb9zTFQzwv6BqmCUaL+YUQEolgh3eAy7i1ovaX5xfmn1n7z7Ra4yZLzgbHSWtLg+9cPan2YiW3bCG3fMTUlzzG0kXJkW9IjrebBiIaC1AG8X74oaBnx0oWAGFjg0FaHIqRsqGB9Nk86K+avf+USa2LCiQS66IIkPANdp0WUpwJM93T1mVeeS8V62DN4CmgOaARcVLKIempdrg7D+N8gDx590x1vB5j1Ekco+OXAicGi03P5OjU3GM+coagksuRNquvUNVkO2rrf9a0tKkHCKCxcSm1W/pOrSbePJcEdFrsvQB+zcaUQ201NzQrRFyRkYJz5wrzjStwmq1twZSmuoRvvLsFEHHar+8ibS995gg2skq354K4jJro6rwVnF1I8Z4F5G+ervyUUVsxq2NAL52pAs5ZruRNaUcicHp7Ieaf6iE6UGOT5O9D7uLN7ZJF9Pzb6OawDHMq9GAdVGe0k="
   file: deploy/vboxguest.tar.gz
   body: New release for CoreOS:${COREOS_VERSION} with VirtualBox Guest Additions:${VBOX_VERSION}
   skip_cleanup: true
+
 notifications:
   email: false
   slack:
