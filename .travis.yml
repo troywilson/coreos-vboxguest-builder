@@ -1,0 +1,52 @@
+dist: trusty
+sudo: required
+
+env:
+  - COREOS_TRACK=stable
+  - COREOS_TRACK=beta
+  - COREOS_TRACK=alpha
+
+before_script:
+  - curl https://${COREOS_TRACK}.release.core-os.net/amd64-usr/current/version.txt -o version.txt
+  - cat version.txt
+  - export $(cat version.txt | xargs)
+  - if [ ! -z `curl https://api.github.com/repos/${TRAVIS_REPO_SLUG}/tags | grep "name" | cut -d '"' -f4 | grep "${COREOS_VERSION}"` ]; then
+      travis_terminate 0;
+    fi
+  - curl http://download.virtualbox.org/virtualbox/LATEST.TXT -o version.txt
+  - cat version.txt
+  - export VBOX_VERSION=`cat version.txt`
+  - mkdir -p $TRAVIS_BUILD_DIR/deploy
+
+script:
+  - docker build
+      --build-arg COREOS_VERSION=${COREOS_VERSION}
+      --build-arg VBOX_VERSION=${VBOX_VERSION}
+      --tag ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
+      .
+  - docker create
+      --name vboxguest
+      ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
+      .
+  - docker cp
+      vboxguest:/dist/vboxguest.tar.gz
+      $TRAVIS_BUILD_DIR/deploy/.
+
+before_deploy:
+  - git config --local user.name "${GITHUB_USER}"
+  - git config --local user.email "${GITHUB_EMAIL}"
+  - git tag "${COREOS_VERSION}"
+
+deploy:
+  provider: releases
+  api_key:
+    - secure: "N6F0k8jzxTvddUvutt3qbPvZsvgWX3lNGdjq2Xw4vj5mb1HROnNKuP/r/cQie+uxo8GceEoQXuj4pOM1+AL8qA1sGucL5LNhbX/rbeGn2I7ewtnlEj0YQvAUm/WOOlKNK0j4PXI0aFjSwrBfe5HPoVdTO2SA9fpnA8+ip9deEGiiip5kXSgicIM2ETgi/odppdo/EltiPh2QiHyX45UeyrB21Q20nItG0h3uwlQOTzD40LoQUIK8XhhytgOBHdWsy9kDcWPVGxFs4B7KU6esKskJX270fjJey5nVhQv/sbNAUKoUuMS3WDSjqgIkQj5uy4XdFPiQKwLrR80b8EtNBRSVf6WDgOMWuMdUzMcT600t3bkF1FWtmXGH1M/Q1F1sOlJ0XpmVYA+q2mNy7h6drFDAfZvNu4nqiNadoFXdiz0zZwVYlbX6ts7VMVTO4COwQSwovcD62FgLaaFpjvADfTBwu7IrI4gZRpW6mJlTIh3x+EmxIp8roTIPX4t8WezbfBygsuM+DXJhvAMLX9SM0TJBW9dlfrhlJ0TNQ1F0kmF357cNKVrPJ0WeyQXl9XtwOkEIty1WdDMzDMmiNojbDcQgRV8VS0zRcgnlj0TAcEiqsYtgz0MmlmI7Xbi7GrNtoqr286A8sPoU/7QQed93zYCR/0+ZNrePaQJlTt+qJlY="
+  file_glob: true
+  file: "deploy/vboxguest.tar.gz"
+  body: "New release for CoreOS:${COREOS_VERSION} with VirtualBox Guest Additions:${VBOX_VERSION}"
+  skip_cleanup: true
+
+notifications:
+  email: false
+  slack:
+    secure: "UZAOgH8Je4t/NIAJmeMm2TH/avZNuqVAvWm82tzctXgo0LwpVh5+gfECXxY0RHip+5C4orRPlxK4W2ff+4j3B//mZ7XsBkIpohZ5XyplKMETKpiPeg61HoAtmaDl7nfSz5T5bTiY2AYnfHLoksI2NHnjayFaETx1Dn3syxHgteZDtrC/m5U73atanclnMV8UM7YFNdRHF1ibbz3RDI2kXppL5+L07zU9GZ/ykqzUFFwvd/rMmNVfqRhFQW0K86HuYkhN5/MQ8AEg6zL0sWqz0WyYmLeciSGs9KCYZgPMBN1dw9aKLs7MWIL+W7A2SCGp76sTABCqx4grQ1S9KNoaSANjPyPi08Eoejj/sswGCL4efryFLnFRtK4McRWaop5uQnr7nVLOUWBfqtbJW1CnBo+8H4lo23k96Bc1/JsArQegENwQPyIenTBDspXgcRoDQ2EchDqc8KMjUXXcFUekflSF3H2BtmdZXJPjMiII2JKiPKtEfMu/MA5FTm9Ko/ACKaoEYDlqswI8YKskysZY5OPTroUcjs5V+l2OChhY2IPRoomeZNKjdS05smt1M9Y7Pd0VlA8JDwbjVa47/ZISLNAR6qhQHy1XtJ8K+xY7Ms4O3xhEAUIc/PnSPM+s8GJd+q/Y5IsxbV3mv+4fmHeAGvQovZD8kNf8bqkM/ax0iYM="
