@@ -43,4 +43,5 @@ RUN KERN_DIR=/usr/src/linux KERN_VER=`readlink /usr/src/linux | cut -d - -f2,3` 
 
 # Prepare release
 RUN mkdir /dist
+RUN echo ${VBOX_VERSION} > /build/vboxguest/version.txt
 RUN tar czf /dist/vboxguest.tar.gz vboxguest
