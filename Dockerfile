@@ -1,5 +1,5 @@
-ARG COREOS_VERSION=1855.4.0
-ARG VBOX_VERSION=5.2.18
+ARG COREOS_VERSION=1855.5.0
+ARG VBOX_VERSION=5.2.20
 
 FROM bugroger/coreos-developer:${COREOS_VERSION}
 
@@ -39,7 +39,9 @@ RUN mv VBoxLinuxAdditions.run /build
 WORKDIR /build
 RUN sh ./VBoxLinuxAdditions.run --noexec --target .
 RUN mkdir vboxguest && tar -C vboxguest -xjf VBoxGuestAdditions-amd64.tar.bz2
-RUN KERN_DIR=/usr/src/linux KERN_VER=`readlink /usr/src/linux | cut -d - -f2,3` make -C /build/vboxguest/src/vboxguest-${VBOX_VERSION} all
+RUN KERN_DIR=/usr/src/linux \
+    KERN_VER=`readlink /usr/src/linux | cut -d - -f2,3` \
+    make -C /build/vboxguest/src/vboxguest-${VBOX_VERSION} vboxguest vboxsf
 
 # Prepare release
 RUN mkdir /dist
