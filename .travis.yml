@@ -11,32 +11,47 @@ before_script:
   - curl https://${COREOS_TRACK}.release.core-os.net/amd64-usr/current/version.txt -o version.txt
   - cat version.txt
   - export $(cat version.txt | xargs)
-  - echo "curl https://api.github.com/repos/${TRAVIS_REPO_SLUG}/tags | grep name | cut -d '' -f4 | grep '${COREOS_VERSION}'"
+  - echo "curl https://api.github.com/repos/${TRAVIS_REPO_SLUG}/tags | grep name | cut -d '\"' -f4 | grep '${COREOS_VERSION}'"
   - if [ ! -z `curl https://api.github.com/repos/${TRAVIS_REPO_SLUG}/tags | grep name | cut -d '"' -f4 | grep '${COREOS_VERSION}'` ]; then
       travis_terminate 0;
     fi
   - curl http://download.virtualbox.org/virtualbox/LATEST.TXT -o version.txt
   - cat version.txt
   - export VBOX_VERSION=`cat version.txt`
+  - echo "mkdir -p $TRAVIS_BUILD_DIR/deploy"
   - mkdir -p $TRAVIS_BUILD_DIR/deploy
 
 script:
+  - echo "docker build
+          --build-arg COREOS_VERSION=${COREOS_VERSION}
+          --build-arg VBOX_VERSION=${VBOX_VERSION}
+          --tag ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
+          ."
   - docker build
     --build-arg COREOS_VERSION=${COREOS_VERSION}
     --build-arg VBOX_VERSION=${VBOX_VERSION}
     --tag ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
     .
+  - echo "docker create
+          --name vboxguest ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
+          ."
   - docker create
     --name vboxguest ${DOCKER_USER}/vboxguest:${COREOS_VERSION}
     .
+  - echo "docker cp
+          vboxguest:/dist/vboxguest.tar.gz
+          $TRAVIS_BUILD_DIR/deploy/."
   - docker cp
     vboxguest:/dist/vboxguest.tar.gz
     $TRAVIS_BUILD_DIR/deploy/.
 
 before_deploy:
-  - git config --local user.name "${GITHUB_USER}"
-  - git config --local user.email "${GITHUB_EMAIL}"
-  - git tag "${COREOS_VERSION}"
+  - echo "git config --local user.name '${GITHUB_USER}'"
+  - git config --local user.name '${GITHUB_USER}'
+  - echo "git config --local user.email '${GITHUB_EMAIL}'"
+  - git config --local user.email '${GITHUB_EMAIL}'
+  - echo "git tag '${COREOS_VERSION}'"
+  - git tag '${COREOS_VERSION}'
 
 deploy:
   provider: releases
