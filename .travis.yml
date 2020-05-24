@@ -1,5 +1,6 @@
+os: linux
 dist: xenial
-sudo: required
+language: ruby
 
 env:
   - COREOS_TRACK=stable
@@ -57,13 +58,13 @@ before_deploy:
 
 deploy:
   provider: releases
-  api_key:
+  token:
     - secure: "fx4J3Su5O6SBgc8UY+F4r73tiW0gNcygmT/I0CPPgN6UXTKss14yefQAeeG+dK4Y08zPB6vSBbUq5dIpbaHK38rTL+sjBeFJPwj12AjvfBKJaE+FUNxxdHfpfealwhF+dlgJI/bpkzeBxebNt1JPZOIt375hH585S4Pl9z5icV2/kDU9bHm/pvvfE2f2EsnpXBcC5Rc0FPrlXxoGrA63ps2Olb9zTFQzwv6BqmCUaL+YUQEolgh3eAy7i1ovaX5xfmn1n7z7Ra4yZLzgbHSWtLg+9cPan2YiW3bCG3fMTUlzzG0kXJkW9IjrebBiIaC1AG8X74oaBnx0oWAGFjg0FaHIqRsqGB9Nk86K+avf+USa2LCiQS66IIkPANdp0WUpwJM93T1mVeeS8V62DN4CmgOaARcVLKIempdrg7D+N8gDx590x1vB5j1Ekco+OXAicGi03P5OjU3GM+coagksuRNquvUNVkO2rrf9a0tKkHCKCxcSm1W/pOrSbePJcEdFrsvQB+zcaUQ201NzQrRFyRkYJz5wrzjStwmq1twZSmuoRvvLsFEHHar+8ibS995gg2skq354K4jJro6rwVnF1I8Z4F5G+ervyUUVsxq2NAL52pAs5ZruRNaUcicHp7Ieaf6iE6UGOT5O9D7uLN7ZJF9Pzb6OawDHMq9GAdVGe0k="
   name: ${COREOS_VERSION}
   tag_name: ${COREOS_VERSION}
   file: deploy/vboxguest.tar.gz
-  body: New release for CoreOS:${COREOS_VERSION} with VirtualBox Guest Additions:${VBOX_VERSION}
-  skip_cleanup: true
+  release_notes: New release for CoreOS:${COREOS_VERSION} with VirtualBox Guest Additions:${VBOX_VERSION}
+  cleanup: false
 
 notifications:
   email: false
