@@ -1,7 +1,8 @@
 # CoreOS VirtualBox Guest Additions Builder
 
-[![Build Status](https://travis-ci.org/troywilson/coreos-vboxguest-builder.svg?branch=master)](https://travis-ci.org/troywilson/coreos-vboxguest-builder) [![Apache V2 License](https://img.shields.io/badge/license-Apache%20V2-blue.svg)](https://github.com/troywilson/coreos-vboxguest-builder/blob/master/LICENSE)
+Container OS has reached its [EOL](http://coreos.com/os/eol/) and this repository has been archived.
 
+[![Apache V2 License](https://img.shields.io/badge/license-Apache%20V2-blue.svg)](https://github.com/troywilson/coreos-vboxguest-builder/blob/master/LICENSE)
 
 This repository automatically builds VirtualBox Guest Additions for each CoreOS Container Linux release.
 
